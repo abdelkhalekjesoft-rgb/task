@@ -32,7 +32,7 @@ class AcmeBankParser implements BankParser{
     }
 
     private function parseAmount($amount){
-        return str_replace(',','.',$amount);
+        return (float)str_replace(',','.',$amount);
     }
 
     private function parserDate($date){

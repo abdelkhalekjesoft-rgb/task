@@ -28,7 +28,7 @@ class FoodicsBankParser implements BankParser{
                 $buffer=$line;
             }else{
                 //false
-                $buffer.=$line;
+                $buffer.=' '.trim($line);
             }
         }
 
@@ -67,7 +67,7 @@ class FoodicsBankParser implements BankParser{
     }
 
     private function parseAmount($dateAmount){
-      return str_replace(',','.',substr($dateAmount,8));
+      return (float)str_replace(',','.',substr($dateAmount,8));
     }
 
     private function parseNotes($notes){
