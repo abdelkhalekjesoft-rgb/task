@@ -1,59 +1,125 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Foodics Pay Coding Challenge – Laravel Implementation
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+### Overview
+This project is a Laravel-based solution for the **Foodics Pay Coding Challenge**. It demonstrates:
+- Webhook ingestion from multiple bank formats
+- Idempotent transaction storage
+- High‑performance processing (1,000+ transactions per webhook)
+- XML transfer request generation according to business rules
+- Clean architecture using Controllers, Services, Jobs, and Tests
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Architecture
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```
+app/
+ ├── Http/Controllers
+ │   ├── WebhookController.php
+ ├── Services
+ │   ├── Webhooks
+ │   │   ├── BankParser.php
+ │   │   ├── PaymentService.php
+ │   │   └── Parsers
+ │   │       ├── FoodicsBankParser.php
+ │   │       └── AcmeBankParser.php
+ └── Models
+     └── Transaction.php
+     └── WebHook.php
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## API Endpoints
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Bank Webhook (Receive Transactions)
+```
+POST /api/webhooks/{bank}
+Content-Type: text/plain
+```
 
-## Laravel Sponsors
+**Description**
+- Accepts raw text payload
+- Each line represents a transaction
+- Supports multiple bank formats
+- Returns `200 OK` immediately
+- Processing is asynchronous
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+**Example Payload**
+```
+2025-06-15#100.00##REF123##note/test
+REF999,2025-06-15,50.00
+```
+---
 
-### Premium Partners
+## Database Design
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### transactions table
 
-## Contributing
+| Column     | Type           | Description |
+|-----------|---------------|-------------|
+| id        | bigint        | Primary key |
+| reference | string (unique)| Idempotency key |
+| amount    | decimal(10,2) | Transaction amount |
+| date      | datetime      | Transaction date |
+| notes      | json (nullable)| Extra metadata |
+| created_at| timestamp     | Laravel timestamp |
+| updated_at| timestamp     | Laravel timestamp |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Idempotency
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- Each transaction has a unique `reference`
+- Duplicate webhooks do not create duplicate records
+- Implemented using `firstOrCreate`
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Performance Considerations
 
-## License
+- Webhook processing uses line‑by‑line parsing
+- Designed to handle large payloads (1,000+ transactions)
+- Performance test included to validate acceptable execution time
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## Testing
+
+### Run tests
+```bash
+php artisan test
+```
+
+### Test Coverage
+- Feature tests for API endpoints
+- Unit tests for webhook ingestion service
+- Performance test for large webhook payloads
+
+---
+
+## Key Design Decisions
+
+- **Thin Controllers**: No business logic
+- **Service Layer**: Parsing & XML generation
+- **Jobs**: Async webhook processing
+- **PSR‑4 Compliance**: Clean autoloading
+- **Laravel Best Practices**
+
+---
+
+## Interview Notes
+
+This project demonstrates:
+- System design thinking
+- Performance awareness
+- Clean separation of concerns
+- Real‑world webhook handling
+
+---
+
+## Author
+
+Developed as part of the Foodics Pay Coding Challenge using Laravel.
+
